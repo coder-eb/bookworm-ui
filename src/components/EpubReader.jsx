@@ -1,5 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ePub from "epubjs";
+import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
+import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
+
 import "./testing.css";
 
 function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
@@ -94,12 +97,16 @@ function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
     return (
         <div>
             <div id="viewer" ref={epubViewerRef} className="spreads" />
-            {!atStart && <a id="prev" href="#prev" className="arrow" onClick={handlePreviousPage}>
-                &lt;
-            </a>}
-            {!atEnd && <a id="next" href="#next" className="arrow" onClick={handleNextPage}>
-                &gt;
-            </a>}
+            {   
+                !atStart 
+                    && 
+                <ChevronLeftOutlined className="hand-on-hover" color="primary" onClick={handlePreviousPage}/>
+            }
+            {
+                !atEnd 
+                    && 
+                <ChevronRightOutlined className="hand-on-hover" color="primary" onClick={handleNextPage}/>
+            }
         </div>
     );
 }
