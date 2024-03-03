@@ -1,118 +1,105 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import ePub from "epubjs";
-import "./EpubReader.css";
+import "./testing.css";
 
-function EpubReader({ url = "PrideAndPrejudice.epub" }) {
-    const tocRef = useRef(null);
-    const epubViewRef = useRef(null);
+function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
+    const epubViewerRef = useRef(null);
 
     const [rendition, setRendition] = useState(null);
-    const [book, setBook] = useState(null);
+    const [atStart, setAtStart] = useState(false);
+    const [atEnd, setAtEnd] = useState(false);
 
-    useEffect(() => {
-        const book = ePub(url);
-        setBook(book);
+    const createBook = (URL) => {
+        return ePub(URL);
+    }
 
-        const rendition = book.renderTo("epubView", {
-            width: "100%",
-            height: "60%",
+    const createRendition = (book) => {
+        const rendition = book.renderTo(epubViewerRef.current, {
             spread: "always",
         });
+        rendition.display();
         setRendition(rendition);
-        rendition.display(undefined);
+        return rendition;
+    } 
 
-        return () => {
-            book.destroy();
-        };
-    }, [url]);
+    const setup = () => {
+        const book = createBook(URL);
+        const rendition = createRendition(book);
 
-    const handleNext = () => {
+        return [book, rendition];
+    }
+    
+    const handleNextPage = () => {
         rendition?.next();
     };
 
-    const handlePrev = () => {
+    const handlePreviousPage = () => {
         rendition?.prev();
     };
 
-    const handleKey = (event) => {
-        if (event.keyCode === 37) {
-            handlePrev();
-        } else if (event.keyCode === 39) {
-            handleNext();
+    const handleKeyPress = (event) => {
+        const ARROW_LEFT = 37, ARROW_RIGHT = 39;
+
+        if (event.keyCode === ARROW_LEFT) {
+            handlePreviousPage();
+        } else if (event.keyCode === ARROW_RIGHT) {
+            handleNextPage();
         }
     };
 
-    const handleTocChange = (event) => {
-        const url = event.target.value;
-        console.log("url", url);
-        rendition?.display(url);
-    };
+    const setupRenditionHooks = () => {
+        rendition.on("keyup", (e) => {
+            console.log("rendition keyup");
+            handleKeyPress(e);
+        });
+        // document.addEventListener("keyup", handleKeyPress);
+
+        rendition.on("relocated", (location) => {
+            console.log("rendition relocated");
+
+            if(location.atStart) {
+                setAtStart(true); setAtEnd(false);
+            } else if (location.atEnd) {
+                setAtStart(false); setAtEnd(true);
+            } else {
+                setAtStart(false); setAtEnd(false);
+            }
+        });
+    }
+
+    const cleanUpRenditionHooks = () => {
+        rendition.off("keyup", handleKeyPress);
+    }
 
     useEffect(() => {
-        if (rendition) {
-            rendition.on("keyup", handleKey);
-            //   document.addEventListener("keyup", handleKey);
-
-            rendition.on("rendered", (section) => {
-                const current = book.navigation?.get(section.href);
-                console.log("current", current.href);
-                console.log("tocRef.current", tocRef.current);
-
-                if (current) {
-                    const option = tocRef.current.querySelector(`option[value="${current.href}"]`);
-                    console.log("option", option);
-                    if (option) {
-                        option.selected = true;
-                    }
-                }
-            });
-
-            rendition.on("relocated", (location) => {
-                const next = document.getElementById("next");
-                const prev = document.getElementById("prev");
-                next.style.visibility = location.atEnd ? "hidden" : "visible";
-                prev.style.visibility = location.atStart ? "hidden" : "visible";
-            });
-
-            rendition.on("layout", (layout) => {
-                const viewer = document.getElementById("viewer");
-                viewer.classList.toggle("single", !layout.spread);
-            });
-        }
+        const [book, rendition] = setup();
 
         return () => {
-            if (rendition) {
-                rendition.off("keyup", handleKey);
-                document.removeEventListener("keyup", handleKey);
-            }
-        };
-    }, [rendition]);
+            book.destroy();
+            rendition.destroy();
+        }; 
+    }, [URL]);
 
     useEffect(() => {
-        if (rendition) {
-            book.loaded.navigation.then((toc) => {
-                const fragment = document.createDocumentFragment();
-                toc.forEach((chapter) => {
-                    const option = document.createElement("option");
-                    option.textContent = chapter.label;
-                    option.value = chapter.href;
-                    fragment.appendChild(option);
-                });
-                tocRef.current.appendChild(fragment);
-            });
-        }
-    }, [rendition]);
+        if(!rendition) return;
 
+        setupRenditionHooks();
+
+        return () => {
+            if(!rendition) return;
+            cleanUpRenditionHooks();
+        };
+    }, [rendition])
+    
     return (
         <div>
-            <select id="toc" ref={tocRef} onChange={handleTocChange} />
-            <div id="epubView" ref={epubViewRef} className="spreads" />
-            <a id="prev" href="#prev" className="arrow" onClick={handlePrev}>
+            <div id="viewer" ref={epubViewerRef} className="spreads" />
+            {!atStart && <a id="prev" href="#prev" className="arrow" onClick={handlePreviousPage}>
                 &lt;
-            </a>
-            <a id="next" href="#next" className="arrow" onClick={handleNext}>
+            </a>}
+            {!atEnd && <a id="next" href="#next" className="arrow" onClick={handleNextPage}>
                 &gt;
-            </a>
+            </a>}
         </div>
     );
 }
