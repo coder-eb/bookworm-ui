@@ -50,15 +50,21 @@ function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
         }
     };
 
+    const focusIframe = () => {
+        const iframe = epubViewerRef.current.querySelector('iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+        }
+    };
+    
     const setupRenditionHooks = () => {
         rendition.on("keyup", (e) => {
-            console.log("rendition keyup");
+            console.log("keyup");
             handleKeyPress(e);
         });
-        // document.addEventListener("keyup", handleKeyPress);
 
         rendition.on("relocated", (location) => {
-            console.log("rendition relocated");
+            console.log("relocated");
 
             if(location.atStart) {
                 setAtStart(true); setAtEnd(false);
@@ -67,6 +73,11 @@ function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
             } else {
                 setAtStart(false); setAtEnd(false);
             }
+        });
+
+        rendition.on("rendered", (e) => {
+            console.log("rendered", e);
+            focusIframe();
         });
     }
 
@@ -84,6 +95,7 @@ function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
     }, [URL]);
 
     useEffect(() => {
+        console.log("rendition updated", rendition);
         if(!rendition) return;
 
         setupRenditionHooks();
