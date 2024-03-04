@@ -1,9 +1,9 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ePub from "epubjs";
 import ChevronLeftOutlined from '@mui/icons-material/ChevronLeftOutlined';
 import ChevronRightOutlined from '@mui/icons-material/ChevronRightOutlined';
 
-import "./testing.css";
+import "./EpubReader.css";
 
 function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
     const epubViewerRef = useRef(null);
