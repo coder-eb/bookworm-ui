@@ -2,6 +2,9 @@
     cursor: pointer;
 }
 
+
+
 #viewer {
-    width: 90vw;
+    height: "100%";
+    /* width: 90vw; */
 }

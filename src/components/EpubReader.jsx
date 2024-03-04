@@ -20,7 +20,7 @@ function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
         const rendition = book.renderTo(epubViewerRef.current, {
             spread: "always",
         });
-        rendition.display();
+        rendition.display("body36.xhtml");
         setRendition(rendition);
         return rendition;
     } 
@@ -109,7 +109,7 @@ function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
     return (
         <div>
             <div id="viewer" ref={epubViewerRef} className="spreads" />
-            {   
+            {/* {   
                 !atStart 
                     && 
                 <ChevronLeftOutlined className="hand-on-hover" color="primary" onClick={handlePreviousPage}/>
@@ -118,7 +118,7 @@ function EpubReader({ URL = "PrideAndPrejudice.epub" }) {
                 !atEnd 
                     && 
                 <ChevronRightOutlined className="hand-on-hover" color="primary" onClick={handleNextPage}/>
-            }
+            } */}
         </div>
     );
 }
